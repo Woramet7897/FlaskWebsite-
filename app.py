@@ -36,7 +36,7 @@ def home():
     db.session.add(visit)
     db.session.commit()
 
-    return render_template("home.html")
+    return render_template("home.html", debug=app.debug)  # ✅ ส่งตัวแปร debug ไปยังเทมเพลต
 
 
 # สร้าง route สำหรับแต่ละหน้าโดยใช้ฟังก์ชันที่แตกต่างกัน
@@ -63,9 +63,12 @@ for i in range(1, 11):
     app.add_url_rule(f"/page{i}", f"page_{i}", create_page_route(i))
 
 
-# เพิ่ม route สำหรับดูสถิติ
+# ✅ แก้ให้ /stats ใช้งานได้เมื่อ debug=True
 @app.route("/stats")
 def stats():
+    if not app.debug:
+        return "Statistics page is only available in debug mode.", 403
+
     # นับจำนวนการเข้าชมแต่ละหน้า
     page_counts = (
         db.session.query(PageVisit.page, db.func.count(PageVisit.id).label("count"))
@@ -73,9 +76,8 @@ def stats():
         .order_by(db.text("count DESC"))
         .all()
     )
-
     return render_template("stats.html", page_counts=page_counts)
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
