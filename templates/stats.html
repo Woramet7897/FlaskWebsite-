@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Statistics</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+</head>
+
+<body>
+    <main class="container">
+        <h1>Page Visit Statistics</h1>
+
+        <a href="/" role="button">Back to Home</a>
+
+        <article>
+            <h2>Most Visited Pages</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Page</th>
+                        <th>Visit Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for page, count in page_counts %}
+                    <tr>
+                        <td>{{ page }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </article>
+    </main>
+</body>
+
+</html>
