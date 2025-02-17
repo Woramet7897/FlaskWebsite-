@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,56 +8,52 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <style>
         .container {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: flex-start;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 40px;
         }
 
-        .nav-right {
+        .main-content {
+            padding: 20px;
+        }
+
+        .nav-sidebar {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            width: 120px;
-            margin-top: 20px;
+            min-width: 120px;
         }
 
-        .content {
-            flex-grow: 1;
-            margin-right: 20px;
-        }
-
-        .nav-right a {
-            margin: 0;
-            text-align: center;
-        }
-
-        .stats-link {
-            margin-top: 20px;
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 
 <body>
-    <div class="content">
-        <h1>Home</h1>
-        {% if current_user.is_authenticated %}
-        <p>Welcome, {{ current_user.username }}!</p>
-        <a href="{{ url_for('logout') }}" role="button">Logout</a>
-        {% else %}
-        <a href="{{ url_for('login') }}" role="button">Login</a>
-        <a href="{{ url_for('register') }}" role="button">Register</a>
-        {% endif %}
-        {% if debug %}
-        <a href="/stats" role="button" class="secondary stats-link">View Statistics</a>
-        {% endif %}
+    <div class="container">
+        <main class="main-content">
+            <h1>Welcome to Our Site</h1>
+
+            {% if current_user.is_authenticated %}
+            <p>Welcome, {{ current_user.username }}!</p>
+            <div class="action-buttons">
+                <a href="{{ url_for('logout') }}" role="button">Logout</a>
+            </div>
+            {% endif %}
+        </main>
+
+        <nav class="nav-sidebar">
+            {% for i in range(1, 11) %}
+            <a href="{{ url_for('page', number=i) }}" role="button" class="secondary">Page {{ i }}</a>
+            {% endfor %}
+        </nav>
     </div>
-    <nav class="nav-right">
-        {% for i in range(1, 11) %}
-        <a href="/page{{ i }}" role="button">Page {{ i }}</a>
-        {% endfor %}
-    </nav>
-    </main>
 </body>
 
 </html>

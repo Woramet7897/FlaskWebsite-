@@ -15,15 +15,20 @@ from flask_migrate import Migrate
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///site.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SECRET_KEY"] = "your-secret-key"  # เปลี่ยนเป็น key ที่ปลอดภัยในการใช้งานจริง
+app.config["SECRET_KEY"] = "your-secret-key"  # ต้องเปลี่ยนเป็นคีย์ที่ปลอดภัย
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
+migrate = Migrate(app, db)
 
 
-# Models
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -38,6 +43,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 
+# ปรับปรุง PageVisit model
 class PageVisit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     page = db.Column(db.String(20), nullable=False)
@@ -47,36 +53,14 @@ class PageVisit(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+# สร้างฐานข้อมูลเมื่อรันแอพ
+with app.app_context():
+    db.create_all()
 
 
-# Routes
-@app.route("/")
-def index():
-    return redirect(url_for("login"))
-
-
-@app.route("/home")
-@login_required
-def home():
-    visit = PageVisit(
-        page="home",
-        ip_address=request.remote_addr,
-        user_agent=request.user_agent.string,
-        user_id=current_user.id if current_user.is_authenticated else None,
-    )
-    db.session.add(visit)
-    db.session.commit()
-    return render_template("home.html", debug=app.debug)
-
-
+# เพิ่ม routes สำหรับ authentication
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for("home"))
-
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
@@ -120,46 +104,23 @@ def register():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("login"))
-
-
-@app.route("/page<int:number>")
-@login_required
-def page(number):
-    if 1 <= number <= 10:  # ตรวจสอบหมายเลขหน้าที่ถูกต้อง
-        visit = PageVisit(
-            page=f"page{number}",
-            ip_address=request.remote_addr,
-            user_agent=request.user_agent.string,
-            user_id=current_user.id if current_user.is_authenticated else None,
-        )
-        db.session.add(visit)
-        db.session.commit()
-        return render_template(f"page{number}.html", number=number)
     return redirect(url_for("home"))
 
 
-@app.route("/stats")
-@login_required
-def stats():
-    # จัดการสิทธิ์การเข้าถึง (เฉพาะ admin)
-    if not current_user.username == "admin":
-        flash("You don't have permission to view this page")
-        return redirect(url_for("home"))
-
-    # รวบรวมสถิติ
-    page_counts = (
-        db.session.query(PageVisit.page, db.func.count(PageVisit.id))
-        .group_by(PageVisit.page)
-        .all()
+# ปรับปรุง route หน้าหลักให้บันทึกข้อมูลผู้ใช้
+@app.route("/")
+def home():
+    visit = PageVisit(
+        page="home",
+        ip_address=request.remote_addr,
+        user_agent=request.user_agent.string,
+        user_id=current_user.id if current_user.is_authenticated else None,
     )
+    db.session.add(visit)
+    db.session.commit()
 
-    return render_template("stats.html", page_counts=page_counts)
+    return render_template("home.html", debug=app.debug)
 
-
-# สร้างฐานข้อมูลเมื่อรันแอพ
-with app.app_context():
-    db.create_all()
 
 if __name__ == "__main__":
     app.run(debug=True)
