@@ -15,7 +15,29 @@
         <a href="/" role="button">Back to Home</a>
 
         <article>
-            <h2>Most Visited Pages</h2>
+            <h2>Latest User Visits</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Page</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in page_visits %}
+                    <tr>
+                        <td>{{ visit.username }}</td>
+                        <td>{{ visit.page }}</td>
+                        <td>{{ visit.timestamp }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </article>
+
+        <article>
+            <h2>Page Visit Counts</h2>
             <table>
                 <thead>
                     <tr>
