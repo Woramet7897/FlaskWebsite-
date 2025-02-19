@@ -1,11 +1,16 @@
 from flask import render_template, request, redirect, url_for, flash
-from flask_login import current_user, login_required
+from flask_login import login_user, login_required, logout_user, current_user
 from datetime import datetime
 from extensions import db
-from models import Post, Like, Comment, PageVisit
+from models import User, Post, Like, Comment, PageVisit
 
 
 def init_routes(app):
+
+    @app.route("/")
+    def home():
+        posts = Post.query.all()  # ดึงโพสต์ทั้งหมดจากฐานข้อมูล
+        return render_template("home.html", posts=posts)
 
     @app.route("/create_post", methods=["POST"])
     @login_required
@@ -76,3 +81,52 @@ def init_routes(app):
         db.session.commit()
 
         return render_template("page.html", number=number)
+
+    @app.route("/logout")
+    @login_required
+    def logout():
+        logout_user()  # ทำการออกจากระบบ
+        return redirect(url_for("home"))  # เปลี่ยนเส้นทางไปยังหน้าแรก
+
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        if current_user.is_authenticated:
+            return redirect(url_for("home"))  # ถ้าผู้ใช้ล็อกอินอยู่แล้วก็ให้ไปที่หน้า home
+
+        if request.method == "POST":
+            username = request.form.get("username")
+            password = request.form.get("password")
+            user = User.query.filter_by(username=username).first()
+
+            if user and user.check_password(
+                password
+            ):  # ตรวจสอบว่า username และ password ถูกต้อง
+                login_user(user)
+                return redirect(url_for("home"))
+            else:
+                flash("Login failed. Check your username and/or password")
+                return redirect(url_for("login"))
+
+        return render_template("login.html")
+
+    @app.route("/register", methods=["GET", "POST"])
+    def register():
+        if request.method == "POST":
+            username = request.form.get("username")
+            password = request.form.get("password")
+            # ตรวจสอบว่าผู้ใช้มีอยู่แล้วหรือไม่
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user:
+                flash("Username already exists. Please choose a different one.")
+                return redirect(url_for("register"))
+
+            # สร้างผู้ใช้ใหม่
+            new_user = User(username=username)
+            new_user.set_password(password)
+            db.session.add(new_user)
+            db.session.commit()
+
+            flash("Registration successful! You can now login.", "success")
+            return redirect(url_for("login"))
+
+        return render_template("register.html")
