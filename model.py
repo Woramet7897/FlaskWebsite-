@@ -20,12 +20,10 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     room_number = db.Column(db.Integer, nullable=False)
 
-    # Optional: เพิ่มฟีเจอร์เพิ่มเติม
     title = db.Column(db.String(200))
     view_count = db.Column(db.Integer, default=0)
     like_count = db.Column(db.Integer, default=0)
 
-    # Relationships
     author = db.relationship("User", backref="posts")
     likes = db.relationship("Like", backref="post", lazy="dynamic")
     comments = db.relationship("Comment", backref="post", lazy="dynamic")
