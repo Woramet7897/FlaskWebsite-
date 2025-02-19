@@ -113,7 +113,9 @@ def init_routes(app):
     def register():
         if request.method == "POST":
             username = request.form.get("username")
+            email = request.form.get("email")  # Get the email from the form
             password = request.form.get("password")
+
             # ตรวจสอบว่าผู้ใช้มีอยู่แล้วหรือไม่
             existing_user = User.query.filter_by(username=username).first()
             if existing_user:
@@ -121,7 +123,7 @@ def init_routes(app):
                 return redirect(url_for("register"))
 
             # สร้างผู้ใช้ใหม่
-            new_user = User(username=username)
+            new_user = User(username=username, email=email)  # Set the email field
             new_user.set_password(password)
             db.session.add(new_user)
             db.session.commit()
