@@ -19,7 +19,7 @@ class User(UserMixin, db.Model):
 
     # ฟังก์ชันสำหรับตรวจสอบรหัสผ่าน
     def check_password(self, password):
-        return check_password_hash(self.password, password)
+        return check_password_hash(self.password)
 
 
 class Post(db.Model):
@@ -51,6 +51,8 @@ class Comment(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
+
+    author = db.relationship("User", backref="comments")
 
 
 class PageVisit(db.Model):
