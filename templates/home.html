@@ -119,6 +119,121 @@
         .action-btn:hover {
             background: #1976D2;
         }
+
+        .post-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .post-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .post-author {
+            font-weight: bold;
+        }
+
+        .post-time {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .post-room {
+            background: #f0f2f5;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+        }
+
+        .post-title {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        .post-content {
+            margin: 15px 0;
+            white-space: pre-wrap;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            padding: 10px 0;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+        }
+
+        .like-btn,
+        .comment-toggle-btn {
+            background: none;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            color: #666;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .like-btn.liked {
+            color: #2196F3;
+        }
+
+        .comments-section {
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+
+        .comment-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .comment-form input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+        }
+
+        .comment-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #f0f2f5;
+            border-radius: 12px;
+        }
+
+        .comment-author {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .comment-time {
+            font-size: 0.8em;
+            color: #666;
+            margin-left: 8px;
+        }
+
+        .room-select {
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 
@@ -134,16 +249,63 @@
                 <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
             </div>
 
+            <!-- ส่วนสร้าง post ใหม่ -->
             <div class="post-box">
-                <textarea class="post-input" placeholder="Share your thoughts..."></textarea>
-                <button class="action-btn">Post</button>
+                <form action="{{ url_for('create_post') }}" method="POST">
+                    <input type="text" name="title" placeholder="หัวข้อโพสต์..." class="post-title">
+                    <textarea name="content" class="post-input" placeholder="คุณกำลังคิดอะไรอยู่..."></textarea>
+                    <select name="room_number" required class="room-select">
+                        <option value="" disabled selected>เลือกห้อง</option>
+                        {% for i in range(1, 11) %}
+                        <option value="{{ i }}">Room {{ i }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="action-btn">โพสต์</button>
+                </form>
             </div>
 
-            <!-- Example posts section -->
-            <div class="post-box">
-                <h3>Sample Post Title</h3>
-                <p>This is where post content would go...</p>
+            <!-- ส่วนแสดง posts -->
+            {% for post in posts %}
+            <div class="post-item">
+                <div class="post-header">
+                    <div class="post-info">
+                        <span class="post-author">{{ post.author.username }}</span>
+                        <span class="post-time">{{ post.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+                        <span class="post-room">Room {{ post.room_number }}</span>
+                    </div>
+                </div>
+
+                <h3 class="post-title">{{ post.title }}</h3>
+                <div class="post-content">{{ post.content }}</div>
+
+                <div class="post-actions">
+                    <form action="{{ url_for('like_post', post_id=post.id) }}" method="POST" class="like-form">
+                        <button type="submit" class="like-btn {% if current_user in post.likes %}liked{% endif %}">
+                            <span class="like-count">{{ post.like_count }}</span> Likes
+                        </button>
+                    </form>
+
+                    <button class="comment-toggle-btn" data-post-id="{{ post.id }}">
+                        Comments ({{ post.comments.count() }})
+                    </button>
+                </div>
+
+                <div id="comments-{{ post.id }}" class="comments-section" style="display: none;">
+                    <form action="{{ url_for('comment_post', post_id=post.id) }}" method="POST" class="comment-form">
+                        <input type="text" name="content" placeholder="แสดงความคิดเห็น..." required>
+                        <button type="submit">ส่ง</button>
+                    </form>
+
+                    {% for comment in post.comments %}
+                    <div class="comment-item">
+                        <span class="comment-author">{{ comment.author.username }}</span>
+                        <span class="comment-content">{{ comment.content }}</span>
+                        <span class="comment-time">{{ comment.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
+            {% endfor %}
         </main>
 
         <nav class="nav-sidebar">
@@ -152,6 +314,23 @@
             {% endfor %}
         </nav>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const commentToggleButtons = document.querySelectorAll('.comment-toggle-btn');
+            commentToggleButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const postId = this.getAttribute('data-post-id');
+                    const commentsSection = document.getElementById(`comments-${postId}`);
+                    if (commentsSection.style.display === 'none') {
+                        commentsSection.style.display = 'block';
+                    } else {
+                        commentsSection.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
