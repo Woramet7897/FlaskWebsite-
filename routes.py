@@ -69,9 +69,20 @@ def init_routes(app):
     @app.route("/page/<int:number>")
     @login_required
     def page(number):
-        post = Post.query.get_or_404(number)
+        # สร้าง dictionary เก็บข้อมูลของแต่ละหน้า
+        page_data = {
+            1: {"title": "Room 1", "content": "เนื้อหาห้อง 1"},
+            2: {"title": "Room 2", "content": "เนื้อหาห้อง 2"},
+            3: {"title": "Room 3", "content": "เนื้อหาห้อง 3"},
+        }
+
+        # ดึงข้อมูลตามเลขห้อง
+        data = page_data.get(
+            number, {"title": f"Room {number}", "content": "ห้องนี้ยังไม่มีเนื้อหา"}
+        )
 
         # เพิ่มจำนวนการดู
+        post = Post.query.get_or_404(number)
         post.view_count += 1
         db.session.commit()
 
@@ -80,7 +91,7 @@ def init_routes(app):
         db.session.add(visit)
         db.session.commit()
 
-        return render_template("page.html", number=number)
+        return render_template("page.html", number=number, data=data)
 
     @app.route("/logout")
     @login_required
