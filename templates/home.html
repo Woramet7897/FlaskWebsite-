@@ -251,60 +251,32 @@
 
             <!-- ส่วนสร้าง post ใหม่ -->
             <div class="post-box">
-                <form action="{{ url_for('create_post') }}" method="POST">
-                    <input type="text" name="title" placeholder="หัวข้อโพสต์..." class="post-title">
-                    <textarea name="content" class="post-input" placeholder="คุณกำลังคิดอะไรอยู่..."></textarea>
-                    <select name="room_number" required class="room-select">
-                        <option value="" disabled selected>เลือกห้อง</option>
-                        {% for i in range(1, 11) %}
+                <form method="POST" action="{{ url_for('create_post') }}">
+                    <input type="text" name="title" placeholder="หัวข้อโพสต์..." required>
+                    <textarea name="content" placeholder="คุณกำลังคิดอะไรอยู่..." required></textarea>
+                    <select name="room_number" required>
+                        {% for i in range(1, 10) %}
                         <option value="{{ i }}">Room {{ i }}</option>
                         {% endfor %}
                     </select>
-                    <button type="submit" class="action-btn">โพสต์</button>
+                    <button type="submit">โพสต์</button>
                 </form>
             </div>
 
             <!-- ส่วนแสดง posts -->
             {% for post in posts %}
-            <div class="post-item">
-                <div class="post-header">
-                    <div class="post-info">
-                        <span class="post-author">{{ post.author.username }}</span>
-                        <span class="post-time">{{ post.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
-                        <span class="post-room">Room {{ post.room_number }}</span>
-                    </div>
-                </div>
-
-                <h3 class="post-title">{{ post.title }}</h3>
-                <div class="post-content">{{ post.content }}</div>
-
-                <div class="post-actions">
-                    <form action="{{ url_for('like_post', post_id=post.id) }}" method="POST" class="like-form">
-                        <button type="submit" class="like-btn {% if current_user in post.likes %}liked{% endif %}">
-                            <span class="like-count">{{ post.like_count }}</span> Likes
-                        </button>
-                    </form>
-
-                    <button class="comment-toggle-btn" data-post-id="{{ post.id }}">
-                        Comments ({{ post.comments.count() }})
-                    </button>
-                </div>
-
-                <div id="comments-{{ post.id }}" class="comments-section" style="display: none;">
-                    <form action="{{ url_for('comment_post', post_id=post.id) }}" method="POST" class="comment-form">
-                        <input type="text" name="content" placeholder="แสดงความคิดเห็น..." required>
-                        <button type="submit">ส่ง</button>
-                    </form>
-
-                    {% for comment in post.comments %}
-                    <div class="comment-item">
-                        <span class="comment-author">{{ comment.author.username }}</span>
-                        <span class="comment-content">{{ comment.content }}</span>
-                        <span class="comment-time">{{ comment.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
+            <article>
+                <header>
+                    <h3>{{ post.title }}</h3>
+                    <p>Posted in <a href="{{ url_for('page', number=post.room_number) }}">Room {{ post.room_number
+                            }}</a></p>
+                    <p>by {{ post.author.username }}</p>
+                </header>
+                <p>{{ post.content }}</p>
+                <footer>
+                    <p>Views: {{ post.view_count }} | Likes: {{ post.like_count }}</p>
+                </footer>
+            </article>
             {% endfor %}
         </main>
 
