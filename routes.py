@@ -19,21 +19,22 @@ def init_routes(app):
         room_number = request.form.get("room_number")
         title = request.form.get("title")
 
-        if not content:
-            flash("Content is required", "danger")
+        if not content or not room_number:
+            flash("Content and room number are required", "danger")
             return redirect(url_for("home"))
 
         post = Post(
             content=content,
             user_id=current_user.id,
-            room_number=room_number,
+            room_number=int(room_number),
             title=title,
         )
 
         db.session.add(post)
         db.session.commit()
-        flash("Post created successfully", "success")
-        return redirect(url_for("home"))
+
+        # Redirect to the selected room
+        return redirect(url_for("page", number=room_number))
 
     @app.route("/like_post/<int:post_id>", methods=["POST"])
     @login_required
@@ -68,11 +69,16 @@ def init_routes(app):
     @app.route("/page/<int:number>")
     @login_required
     def page(number):
-        data = {
-            "title": f"Room {number}",
-            "content": f"Welcome to Room {number}!",
-        }
-        return render_template("page.html", data=data)
+        # Fetch all posts in this room
+        room_posts = (
+            Post.query.filter_by(room_number=number)
+            .order_by(Post.timestamp.desc())
+            .all()
+        )
+
+        data = {"title": f"Room {number}", "content": f"Welcome to Room {number}!"}
+
+        return render_template("page.html", data=data, room_posts=room_posts)
 
     @app.route("/logout")
     @login_required
