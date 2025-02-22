@@ -86,13 +86,20 @@ def init_routes(app):
         if request.method == "POST":
             username = request.form.get("username")
             password = request.form.get("password")
+            print(f"Login attempt - Username: {username}")  # debug
+            print(f"Password provided: {bool(password)}")  # debug
+
             user = User.query.filter_by(username=username).first()
-            if user and user.check_password(password):
-                login_user(user)
-                flash("Logged in successfully", "success")
-                return redirect(url_for("home"))
-            else:
-                flash("Invalid username or password", "danger")
+            print(f"User found: {user is not None}")  # debug
+
+            if user:
+                print(f"Stored password hash: {user.password}")  # debug
+                if user.check_password(password):
+                    login_user(user)
+                    flash("Logged in successfully", "success")
+                    return redirect(url_for("home"))
+
+            flash("Invalid username or password", "danger")
         return render_template("login.html")
 
     @app.route("/register", methods=["GET", "POST"])
