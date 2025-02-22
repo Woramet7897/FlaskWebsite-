@@ -20,7 +20,7 @@ def init_routes(app):
         title = request.form.get("title")
 
         if not content:
-            flash("Post content cannot be empty")
+            flash("Content is required", "danger")
             return redirect(url_for("home"))
 
         post = Post(
@@ -32,23 +32,17 @@ def init_routes(app):
 
         db.session.add(post)
         db.session.commit()
-
+        flash("Post created successfully", "success")
         return redirect(url_for("home"))
 
     @app.route("/like_post/<int:post_id>", methods=["POST"])
     @login_required
     def like_post(post_id):
         post = Post.query.get_or_404(post_id)
-        like = Like.query.filter_by(user_id=current_user.id, post_id=post_id).first()
-
-        if like:
-            db.session.delete(like)
-            post.like_count -= 1
+        if current_user in post.likes:
+            post.likes.remove(current_user)
         else:
-            like = Like(user_id=current_user.id, post_id=post_id)
-            db.session.add(like)
-            post.like_count += 1
-
+            post.likes.append(current_user)
         db.session.commit()
         return redirect(url_for("home"))
 
@@ -57,89 +51,65 @@ def init_routes(app):
     def comment_post(post_id):
         content = request.form.get("content")
         if not content:
-            flash("Comment cannot be empty")
+            flash("Comment content is required", "danger")
             return redirect(url_for("home"))
 
-        comment = Comment(content=content, user_id=current_user.id, post_id=post_id)
+        comment = Comment(
+            content=content,
+            user_id=current_user.id,
+            post_id=post_id,
+        )
 
         db.session.add(comment)
         db.session.commit()
+        flash("Comment added successfully", "success")
         return redirect(url_for("home"))
 
     @app.route("/page/<int:number>")
     @login_required
     def page(number):
-        # สร้าง dictionary เก็บข้อมูลของแต่ละหน้า
-        page_data = {
-            1: {"title": "Room 1", "content": "เนื้อหาห้อง 1"},
-            2: {"title": "Room 2", "content": "เนื้อหาห้อง 2"},
-            3: {"title": "Room 3", "content": "เนื้อหาห้อง 3"},
+        data = {
+            "title": f"Room {number}",
+            "content": f"Welcome to Room {number}!",
         }
-
-        # ดึงข้อมูลตามเลขห้อง
-        data = page_data.get(
-            number, {"title": f"Room {number}", "content": "ห้องนี้ยังไม่มีเนื้อหา"}
-        )
-
-        # เพิ่มจำนวนการดู
-        post = Post.query.get_or_404(number)
-        post.view_count += 1
-        db.session.commit()
-
-        # บันทึกการเข้าชม
-        visit = PageVisit(username=current_user.username, page=f"Page {number}")
-        db.session.add(visit)
-        db.session.commit()
-
-        return render_template("page.html", number=number, data=data)
+        return render_template("page.html", data=data)
 
     @app.route("/logout")
     @login_required
     def logout():
-        logout_user()  # ทำการออกจากระบบ
-        return redirect(url_for("home"))  # เปลี่ยนเส้นทางไปยังหน้าแรก
+        logout_user()
+        flash("You have been logged out", "success")
+        return redirect(url_for("login"))
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
-        if current_user.is_authenticated:
-            return redirect(url_for("home"))  # ถ้าผู้ใช้ล็อกอินอยู่แล้วก็ให้ไปที่หน้า home
-
         if request.method == "POST":
             username = request.form.get("username")
             password = request.form.get("password")
             user = User.query.filter_by(username=username).first()
-
-            if user and user.check_password(
-                password
-            ):  # ตรวจสอบว่า username และ password ถูกต้อง
+            if user and user.check_password(password):
                 login_user(user)
+                flash("Logged in successfully", "success")
                 return redirect(url_for("home"))
             else:
-                flash("Login failed. Check your username and/or password")
-                return redirect(url_for("login"))
-
+                flash("Invalid username or password", "danger")
         return render_template("login.html")
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
         if request.method == "POST":
             username = request.form.get("username")
-            email = request.form.get("email")  # Get the email from the form
+            email = request.form.get("email")
             password = request.form.get("password")
 
-            # ตรวจสอบว่าผู้ใช้มีอยู่แล้วหรือไม่
-            existing_user = User.query.filter_by(username=username).first()
-            if existing_user:
-                flash("Username already exists. Please choose a different one.")
+            if User.query.filter_by(username=username).first():
+                flash("Username already exists", "danger")
                 return redirect(url_for("register"))
 
-            # สร้างผู้ใช้ใหม่
-            new_user = User(username=username, email=email)  # Set the email field
-            new_user.set_password(password)
-            db.session.add(new_user)
+            user = User(username=username, email=email)
+            user.set_password(password)
+            db.session.add(user)
             db.session.commit()
-
-            flash("Registration successful! You can now login.", "success")
+            flash("Registered successfully", "success")
             return redirect(url_for("login"))
-
         return render_template("register.html")

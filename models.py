@@ -5,6 +5,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class User(UserMixin, db.Model):
+    __tablename__ = "user"
+    __table_args__ = {"extend_existing": True}
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -19,7 +22,13 @@ class User(UserMixin, db.Model):
 
     # ฟังก์ชันสำหรับตรวจสอบรหัสผ่าน
     def check_password(self, password):
-        return check_password_hash(self.password)
+        try:
+            return check_password_hash(self.password, password)
+        except TypeError as e:
+            print(f"Error checking password: {e}")  # debug
+            print(f"Stored password hash: {self.password}")  # debug
+            print(f"Provided password: {password}")  # debug
+            return False
 
 
 class Post(db.Model):
