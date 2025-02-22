@@ -44,7 +44,7 @@ class Post(db.Model):
 
     author = db.relationship("User", backref="posts")
     likes = db.relationship("Like", backref="post", lazy="dynamic")
-    comments = db.relationship("Comment", backref="post", lazy="dynamic")
+    comments = db.relationship("Comment", backref="post", lazy=True)
 
 
 class Like(db.Model):
