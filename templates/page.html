@@ -23,6 +23,20 @@
             <footer>
                 <p>Views: {{ post.view_count }} | Likes: {{ post.like_count }}</p>
             </footer>
+
+            <!-- Comment section -->
+            <section>
+                <h4>Comments</h4>
+                {% for comment in post.comments %}
+                <div>
+                    <p><strong>{{ comment.author.username }}</strong>: {{ comment.content }}</p>
+                </div>
+                {% endfor %}
+                <form method="POST" action="{{ url_for('comment_post', post_id=post.id) }}">
+                    <textarea name="content" placeholder="Add a comment..." required></textarea>
+                    <button type="submit">Comment</button>
+                </form>
+            </section>
         </article>
         {% endfor %}
 
