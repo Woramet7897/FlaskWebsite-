@@ -11,10 +11,22 @@
 <body>
     <main class="container">
         <h1>{{ data.title }}</h1>
-        <div class="content">
-            {{ data.content }}
-        </div>
-        <a href="/" role="button">Back to Home</a>
+
+        <!-- Display all posts in this room -->
+        {% for post in room_posts %}
+        <article>
+            <header>
+                <h3>{{ post.title }}</h3>
+                <p>Posted by {{ post.author.username }}</p>
+            </header>
+            <p>{{ post.content }}</p>
+            <footer>
+                <p>Views: {{ post.view_count }} | Likes: {{ post.like_count }}</p>
+            </footer>
+        </article>
+        {% endfor %}
+
+        <a href="{{ url_for('home') }}" role="button">Back to Home</a>
     </main>
 </body>
 
