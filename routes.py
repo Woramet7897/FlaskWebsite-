@@ -53,7 +53,7 @@ def init_routes(app):
         content = request.form.get("content")
         if not content:
             flash("Comment content is required", "danger")
-            return redirect(url_for("home"))
+            return redirect(url_for("page", number=Post.query.get(post_id).room_number))
 
         comment = Comment(
             content=content,
@@ -64,7 +64,7 @@ def init_routes(app):
         db.session.add(comment)
         db.session.commit()
         flash("Comment added successfully", "success")
-        return redirect(url_for("home"))
+        return redirect(url_for("page", number=Post.query.get(post_id).room_number))
 
     @app.route("/page/<int:number>")
     @login_required
