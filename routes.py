@@ -8,6 +8,13 @@ from models import User, Post, Like, Comment, PageVisit
 def init_routes(app):
 
     @app.route("/")
+    def index():
+        if current_user.is_authenticated:
+            return redirect(url_for("home"))
+        return redirect(url_for("login"))
+
+    @app.route("/home")
+    @login_required
     def home():
         posts = Post.query.all()  # ดึงโพสต์ทั้งหมดจากฐานข้อมูล
         return render_template("home.html", posts=posts)
