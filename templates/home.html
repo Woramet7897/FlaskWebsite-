@@ -73,9 +73,11 @@
 
         .header-section {
             display: flex;
-            flex-direction: column;
-            /* จัดให้อยู่คนละบรรทัดกับปุ่ม Logout */
+            justify-content: center;
+            /* จัดให้ข้อความ Welcome อยู่ตรงกลาง */
             align-items: center;
+            position: relative;
+            /* ใช้สำหรับจัดตำแหน่งปุ่ม Logout */
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 1px solid #e0e0e0;
@@ -85,12 +87,17 @@
             font-size: 1.5em;
             font-weight: bold;
             color: #000;
-            /* เปลี่ยนเป็นสีดำเพื่อความชัดเจน */
+            /* ใช้สีดำเพื่อความชัดเจน */
             text-align: center;
+            flex: 1;
+            /* ทำให้ Welcome ขยายเต็มพื้นที่ตรงกลาง */
         }
 
-
         .logout-btn {
+            position: absolute;
+            right: 0;
+            /* จัดให้อยู่มุมขวาบน */
+            top: 0;
             background: var(--primary-color);
             color: white;
             padding: 8px 16px;
